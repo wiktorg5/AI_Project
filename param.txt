@@ -1,0 +1,13 @@
+place_width = 8.6
+park_depth = 3.0
+street_width = 7
+street_length = 26
+car_width = 2.3
+car_length = 5.1
+front_axis_dist = 1.6
+back_axis_dist = 0.45
+dt = 0.1
+Vmod = 2.0
+wheel_turn_angle_max = 0.7853981633974483
+if_side_parking_place = 1
+max_number_of_steps = 100
