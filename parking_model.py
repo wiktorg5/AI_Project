@@ -164,7 +164,7 @@ def model_of_car(state, wheel_turn_angle, V, var_global):
             #suma(i) = sum(ilo_weks(end,:))
             Wp[i] = (np.sum(ilo_weks > 0) == 4)
 
-        #.pdb.set_trace()
+        pdb.set_trace()
 
         if (np.sum(W) < 4) | (np.sum(Wp) > 0):  # obstacle detected
             state_next = initial_state
