@@ -1,16 +1,32 @@
-# This is a sample Python script.
+import numpy, random, os
+lr = 1 #learning rate
+bias = 1 #value of bias
+weights = [random.random(),random.random(),random.random()] #weights generated in a list (3 weights in total for 2 neurons and the bias)
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+def Perceptron(input1, input2, output) :
+   outputP = input1*weights[0]+input2*weights[1]+bias*weights[2]
+   if outputP > 0 : #activation function (here Heaviside)
+      outputP = 1
+   else :
+      outputP = 0
+   error = output - outputP
+   weights[0] += error * input1 * lr
+   weights[1] += error * input2 * lr
+   weights[2] += error * bias * lr
 
+for i in range(50):
+    Perceptron(1, 1, 1)  # True or true
+    Perceptron(1, 0, 1)  # True or false
+    Perceptron(0, 1, 1)  # False or true
+    Perceptron(0, 0, 0)  # False or false
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+x = int(input())
+y = int(input())
+outputP = x*weights[0] + y*weights[1] + bias*weights[2]
+if outputP > 0 : #activation function
+   outputP = 1
+else :
+   outputP = 0
+print(x, "or", y, "is : ", outputP)
 
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+outputP = 1/(1+numpy.exp(-outputP)) #sigmoid function
