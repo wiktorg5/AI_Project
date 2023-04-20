@@ -1,11 +1,12 @@
 import numpy as np
 import pdb
 
+
 # The model of car movement in the parking area (street + parking place)
 # Input:
 # state - xs,ys - coordinates of a center of a car, alpha - car orientation angle
 # wheel_turn_angle - front wheel turn angle
-# V - car velocity (positive - forward, nagative - backward movement)
+# V - car velocity (positive - forward, negative - backward movement)
 # Output:
 # state_next - next state after time dt
 # rotation_center - coordinates of a point around which the car rotates
@@ -15,18 +16,17 @@ class GlobalVar:
     # sizes in meters:
     place_width = 8.6  # width of a parking place
     park_depth = 3.0  # depth of a parking place
-    street_width = 7
+    street_width = 7  # width of the fragment of the street
     street_length = 26  # length of a fragment of a street
     car_width = 2.3
     car_length = 5.1
     front_axis_dist = 1.6  # distance from front axle to front bumper of a car
     back_axis_dist = 0.45  # distance from back axle to back bumper of a car
-    dt = 0.1               # time between simulation steps in seconds
-    Vmod = 2.0             # absolute value of veloity
+    dt = 0.1  # time between simulation steps in seconds
+    Vmod = 2.0  # absolute value of velocity
     wheel_turn_angle_max = np.pi / 4  # the maximum turning angle of the wheels
     if_side_parking_place = True
     max_number_of_steps = 100
-
 
 
 def park_save(filename, param):
@@ -42,37 +42,37 @@ def park_save(filename, param):
     pli.write("dt = " + str(param.dt) + "\n")
     pli.write("Vmod = " + str(param.Vmod) + "\n")
     pli.write("wheel_turn_angle_max = " + str(param.wheel_turn_angle_max) + "\n")
-    pli.write("if_side_parking_place = %d\n" % (param.if_side_parking_place))
-    pli.write("max_number_of_steps = %d\n" % (param.max_number_of_steps ))
+    pli.write("if_side_parking_place = %d\n" % param.if_side_parking_place)
+    pli.write("max_number_of_steps = %d\n" % param.max_number_of_steps)
     pli.close()
 
 
-
-# Localication of corners of a car based on current state
+# Localization of corners of a car based on current state
 # PLEASE, DO NOT CHANGE ANYTHING IN THIS FILE!
 def corners_of_car(state, var_global):
     car_width = var_global.car_width
     car_length = var_global.car_length
 
-    x,y,alfa = state
+    x, y, alfa = state
 
-    xA = x - car_length/2*np.cos(alfa) - car_width/2*np.sin(alfa)
-    yA = y - car_length/2*np.sin(alfa) + car_width/2*np.cos(alfa)
+    xA = x - car_length / 2 * np.cos(alfa) - car_width / 2 * np.sin(alfa)
+    yA = y - car_length / 2 * np.sin(alfa) + car_width / 2 * np.cos(alfa)
 
-    xB = xA + car_width*np.sin(alfa)
-    yB = yA - car_width*np.cos(alfa)
+    xB = xA + car_width * np.sin(alfa)
+    yB = yA - car_width * np.cos(alfa)
 
-    xD = xA + car_length*np.cos(alfa)
-    yD = yA + car_length*np.sin(alfa)
+    xD = xA + car_length * np.cos(alfa)
+    yD = yA + car_length * np.sin(alfa)
 
-    xC = xB + car_length*np.cos(alfa)
-    yC = yB + car_length*np.sin(alfa)
+    xC = xB + car_length * np.cos(alfa)
+    yC = yB + car_length * np.sin(alfa)
 
     X = np.array([xA, xB, xC, xD])
     Y = np.array([yA, yB, yC, yD])
-    return X,Y
+    return X, Y
 
-#function[state_next, rotation_center] = model_of_car(state, wheel_turn_angle, V)
+
+# function[state_next, rotation_center] = model_of_car(state, wheel_turn_angle, V)
 def model_of_car(state, wheel_turn_angle, V, var_global):
     dt = var_global.dt
     place_width = var_global.place_width
@@ -83,9 +83,11 @@ def model_of_car(state, wheel_turn_angle, V, var_global):
     car_length = var_global.car_length
     front_axis_dist = var_global.front_axis_dist
     back_axis_dist = var_global.back_axis_dist
-    wheel_turn_angle_max =  var_global.wheel_turn_angle_max
+    wheel_turn_angle_max = var_global.wheel_turn_angle_max
 
-    number_of_iterations = 5  # number of iterations if car hit an obstacle (as more as better approximation of collision moment)
+    number_of_iterations = 5  # number of iterations if car hit an obstacle (as much as better approximation of collision moment)
+
+    # if the turning angle is too big set it to the maximum turning angle
     if np.abs(wheel_turn_angle) > wheel_turn_angle_max:
         wheel_turn_angle = np.sign(wheel_turn_angle) * wheel_turn_angle_max
 
@@ -95,7 +97,7 @@ def model_of_car(state, wheel_turn_angle, V, var_global):
     collision_detected = False
     while if_end == False:
         xs, ys, alpha = initial_state  # center of car coordinates
-        # alpha - car orientation angle, alpha = 0, when car longitudinal axis || to x axis and car is directed to the right
+        # alpha - car orientation angle, alpha = 0, when car longitudinal axis || to x-axis and car is directed to the right
 
         # the difference between car geometrical center and center between
         # axes:
@@ -109,7 +111,7 @@ def model_of_car(state, wheel_turn_angle, V, var_global):
         # 1. Calculation of new position of a center of rectangular area
         # between car axles
         d_osi = car_length - front_axis_dist - back_axis_dist  # distance between axles
-        rotation_center = [0,0]
+        rotation_center = [0, 0]
         if abs(wheel_turn_angle) < 1e-6:
             xn = x + V * dt * np.cos(alpha)
             yn = y + V * dt * np.sin(alpha)
@@ -118,7 +120,8 @@ def model_of_car(state, wheel_turn_angle, V, var_global):
             a = d_osi / np.tan(wheel_turn_angle)
             Ro = np.sqrt(d_osi * d_osi / 4 + ((abs(a) + car_width / 2) ** 2))  # radius of car rotation
             tau = np.sign(wheel_turn_angle) * alpha + np.arcsin(d_osi / 2 / Ro)
-            rotation_center = [x - Ro * np.sin(tau), y + np.sign(wheel_turn_angle) * Ro * np.cos(tau)]  # center of rotation
+            rotation_center = [x - Ro * np.sin(tau),
+                               y + np.sign(wheel_turn_angle) * Ro * np.cos(tau)]  # center of rotation
             gama = V * dt / Ro  # wheel_turn_angle
             xn = x + Ro * (np.sin(gama + tau) - np.sin(tau))
             yn = y + np.sign(wheel_turn_angle) * Ro * (np.cos(tau) - np.cos(gama + tau))
@@ -147,24 +150,23 @@ def model_of_car(state, wheel_turn_angle, V, var_global):
                                      (X <= place_width / 2)))
 
         # Wp - Czy naroznik parkingu nie znajduje sie 'wewnatrz' auta
-        Wp = np.zeros(shape = [4])
+        Wp = np.zeros(shape=[4])
         for i in range(len(Xp)):
-            v_kr_X = np.concatenate([X[1:],[X[0]]]) - X
-            v_kr_Y = np.concatenate([Y[1:],[Y[0]]]) - Y # wsp. wektorow krawedzi auta ( w kolumnach)
-            v_kr = np.array([v_kr_X,v_kr_Y]).transpose()
-
+            v_kr_X = np.concatenate([X[1:], [X[0]]]) - X
+            v_kr_Y = np.concatenate([Y[1:], [Y[0]]]) - Y  # wsp. wektorow krawedzi auta ( w kolumnach)
+            v_kr = np.array([v_kr_X, v_kr_Y]).transpose()
 
             v_pkt_X = Xp[i] - X
-            v_pkt_Y = Yp[i] - Y   # wsp. wektorow od wierzcholkow auta do punktu (xp,yp)
-            v_pkt = np.array([v_pkt_X,v_pkt_Y]).transpose()  # wektory w kolumnach
-            ilo_weks = np.cross(v_kr,v_pkt)                  # iloczyny wektorowe v_kr(j) x v_pkt(j)
+            v_pkt_Y = Yp[i] - Y  # wsp. wektorow od wierzcholkow auta do punktu (xp,yp)
+            v_pkt = np.array([v_pkt_X, v_pkt_Y]).transpose()  # wektory w kolumnach
+            ilo_weks = np.cross(v_kr, v_pkt)  # iloczyny wektorowe v_kr(j) x v_pkt(j)
 
-            #ilo_weks = cross([v_kr; zeros(1, 4)], [v_pkt; zeros(1, 4)])  # iloczyny wektorowe v_kr(j) x v_pkt(j)
-            #Wp(i) = (sum(ilo_weks(end,:) > 0) < 4)  # jesli wszystkie dodatnie, to znaczy ze punkt lezy wewnatrz auta
-            #suma(i) = sum(ilo_weks(end,:))
+            # ilo_weks = cross([v_kr; zeros(1, 4)], [v_pkt; zeros(1, 4)])  # iloczyny wektorowe v_kr(j) x v_pkt(j)
+            # Wp(i) = (sum(ilo_weks(end,:) > 0) < 4)  # jesli wszystkie dodatnie, to znaczy ze punkt lezy wewnatrz auta
+            # suma(i) = sum(ilo_weks(end,:))
             Wp[i] = (np.sum(ilo_weks > 0) == 4)
 
-        #.pdb.set_trace()
+        # .pdb.set_trace()
 
         if (np.sum(W) < 4) | (np.sum(Wp) > 0):  # obstacle detected
             state_next = initial_state
@@ -181,5 +183,3 @@ def model_of_car(state, wheel_turn_angle, V, var_global):
         iter = iter + 1
 
     return state_next, rotation_center, collision_detected
-
-

@@ -6,16 +6,16 @@ def reward(param_phis, state, if_collision, if_stop):
     value = 0
     x = state[0]
     y = state[1]
-    alfa = state[2]
+    alpha = state[2]
     dist_xy_sq = x * x + y * y
     alfa_zred = 0
     if param_phis.if_side_parking_place:
-        if np.abs(alfa) > np.pi / 2:
-            alfa_zred = np.pi - np.abs(alfa)
+        if np.abs(alpha) > np.pi / 2:
+            alfa_zred = np.pi - np.abs(alpha)
         else:
-            alfa_zred = np.abs(alfa)
+            alfa_zred = np.abs(alpha)
     else:
-        alfa_zred = np.abs(np.abs(alfa) - np.pi / 2)
+        alfa_zred = np.abs(np.abs(alpha) - np.pi / 2)
 
     alfa_zred = alfa_zred / (dist_xy_sq + 0.5)
 
@@ -63,10 +63,10 @@ def park_test(param_phis, initial_state):
         while if_stop == False:
             step = step + 1
 
-            # We determine actions a (angle + direction of motion) in the state state according to the learned strategy:
+            # We determine actions a (angle + direction of motion) in the state according to the learned strategy:
             angle, V = choose_action(param_phis, state)
 
-            # saveing the step of history :
+            # saving the step of history :
             # phist.write(str(episode + 1) + "  " + str(step) + "  " + str(state[0]) + "  " + str(state[1]) + "  " + str(state[2]) + "  " + str(angle) + "  " + str(V) + "\n")
             phist.write(
                 "%d %d %.4f %.4f %.4f %.4f %.4f\n" % ((episode + 1), step, state[0], state[1], state[2], angle, V))
@@ -85,32 +85,31 @@ def park_test(param_phis, initial_state):
         num_of_steps = num_of_steps + step
         print("in %d episode sum of rewards = %g, num of steps = %d" % (episode, sum_of_rewards_in_episode, step))
 
-    print("average sum of rewards in episode = %g" % (avg_sum_of_rewards))
+    print("average sum of rewards in episode = %g" % avg_sum_of_rewards)
     print("average number of steps = %g" % (num_of_steps / num_of_initial_states))
     phist.close()
 
 
 # training procedure proper for reinforcement learning with approximation of action values:
 def park_train():
-    liczba_epizodow = 2000
-    alfa = 0.001  # learning rate (may be a function of time)
-    epsylon = 0.1  # exploration factor (may be a function of time)
+    number_of_episodes = 2000
+    alpha = 0.001  # learning rate (may be a function of time)
+    epsilon = 0.1  # exploration factor (may be a function of time)
 
-    initial_state = np.array([[9.1, 4.6, 0], [6.3, 5.06, 0], [9.6, 3.15, 0], [7.3, 5.75, 0], [10.1, 6.21, 0]],
-                             dtype=float)
+    initial_state = np.array([[9.1, 4.6, 0], [6.3, 5.06, 0], [9.6, 3.15, 0], [7.3, 5.75, 0], [10.1, 6.21, 0]], dtype=float)
     num_of_initial_states, lparam = initial_state.shape
 
-    param_phis = pm.GlobalVar()  # phisical parameters of a parking and a car
+    param_phis = pm.GlobalVar()  # physical parameters of the parking and the car
 
     # initiation of coding, determination of the number of parameters (weights):
     # ........................................................
     # ........................................................
 
     # weight vector initialization:
-    liczba_wag = 1000  # for now to start a program
-    w = np.zeros(liczba_wag)
+    number_of_weights = 1000  # for now to start a program
+    w = np.zeros(number_of_weights)
 
-    for episode in range(liczba_epizodow):
+    for episode in range(number_of_episodes):
         # Initial state choosing:
         init_state_no = episode % num_of_initial_states
         state = initial_state[init_state_no, :]
@@ -121,17 +120,16 @@ def park_train():
         while if_stop == False:
             step = step + 1
 
-            # We determine actions a (angle + direction of motion) in the state state, 
-            # taking into account exploration (e.g. in reinforcement learning, 
-            # the epsylon-greedy or softmax method)
+            # We determine actions a (angle + direction of motion) in the state, taking into account exploration
+            # (e.g. in reinforcement learning, the epsilon-greedy or softmax method)
             # ........................................................
             # ........................................................
             angle = np.pi / 8  # for now
-            V = param_phis.Vmod;  # for now
+            V = param_phis.Vmod  # for now
             # determination of a new state:
             new_state, rotation_center, if_collision = pm.model_of_car(state, angle, V, param_phis)
 
-            if (if_collision) | (step >= param_phis.max_number_of_steps):
+            if if_collision | (step >= param_phis.max_number_of_steps):
                 if_stop = True
 
             R = reward(param_phis, new_state, if_collision, if_stop)
