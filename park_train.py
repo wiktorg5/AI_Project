@@ -1,5 +1,6 @@
 import numpy as np
 import parking_model as pm
+from tensorflow import keras
 
 
 def reward(param_phis, state, if_collision, if_stop):
@@ -39,6 +40,20 @@ def choose_action(param_phis, state):
     # the strategy can be, for example, represented by an approximator of the utility function
     # ..........................................
     # ..........................................
+    inputs = keras.layers.Input(shape=(28, 28))
+    flatten = keras.layers.Flatten()
+    dense1 = keras.layers.Dense(128, activation="relu")
+    dense2 = keras.layers.Dense(64)
+    dense3 = keras.layers.Dense(64)
+
+    x = flatten(inputs)
+    x = dense1(x)
+
+    outputs1 = dense2(x)
+    outputs2 = dense3(x)
+
+    model = keras.Model(inputs=inputs, outputs=[outputs1, outputs2])
+    model.summary()
 
     angle = -np.pi / 8  # steering angle (for now)
     V = -param_phis.Vmod  # speed (for now)
@@ -96,7 +111,8 @@ def park_train():
     alpha = 0.001  # learning rate (may be a function of time)
     epsilon = 0.1  # exploration factor (may be a function of time)
 
-    initial_state = np.array([[9.1, 4.6, 0], [6.3, 5.06, 0], [9.6, 3.15, 0], [7.3, 5.75, 0], [10.1, 6.21, 0]], dtype=float)
+    initial_state = np.array([[9.1, 4.6, 0], [6.3, 5.06, 0], [9.6, 3.15, 0], [7.3, 5.75, 0], [10.1, 6.21, 0]],
+                             dtype=float)
     num_of_initial_states, lparam = initial_state.shape
 
     param_phis = pm.GlobalVar()  # physical parameters of the parking and the car
